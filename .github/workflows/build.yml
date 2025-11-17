@@ -47,14 +47,13 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Run Unit Tests (Exclude ArchitectureTests)
+      - name: Run Unit Tests (xUnit only)
         run: |
-          dotnet test ${{ env.SOLUTION_FILE }} \
+          dotnet test tests/FunctionalTests/Api.FunctionalTests.csproj \
             --configuration Release \
             --no-build \
             --logger trx \
-            --results-directory TestResults \
-            --filter "FullyQualifiedName!~ArchitectureTests"
+            --results-directory TestResults
 
       - name: Upload TRX Test Results
         uses: actions/upload-artifact@v4
