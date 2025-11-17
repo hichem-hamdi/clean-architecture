@@ -4,6 +4,8 @@ on:
   push:
     branches: [ main ]
   pull_request:
+    branches:
+      - main   # cible de la PR
   workflow_dispatch:
 
 env:
