@@ -39,7 +39,7 @@ jobs:
         run: dotnet build CleanArchitecture.sln --configuration Release --no-restore -warnaserror
 
       - name: Run All Tests 🧪
-        run: dotnet test CleanArchitecture.sln --configuration Release --no-build --logger "junit;LogFilePath=TestResults/test-results.xml"
+        run: dotnet test CleanArchitecture.sln --configuration Release --no-build --logger "xunit;LogFilePath=TestResults/test-results.xml"
 
       - name: Display JUnit Test Report 📊
         uses: mikepenz/action-junit-report@v2
