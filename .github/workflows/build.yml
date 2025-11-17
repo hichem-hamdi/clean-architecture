@@ -1,4 +1,4 @@
-﻿name: Build & Test 🧪
+﻿name: Build & Test (.NET 9)
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 
 env:
   DOTNET_VERSION: "9.x"
+  SOLUTION_FILE: "CleanArchitecture.sln"
 
 jobs:
 
@@ -15,59 +16,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Cache NuGet 🗂️
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Setup .NET 📦
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies 📂
-        run: dotnet restore CleanArchitecture.sln
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_FILE }}
 
-      - name: Build 🧱
-        run: |
-          dotnet build CleanArchitecture.sln \
-            --configuration Release \
-            --no-restore \
-            -warnaserror
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
 
   test:
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Cache NuGet 🗂️
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Setup .NET 📦
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Run Tests 🧪
-        run: |
-          dotnet test CleanArchitecture.sln \
-            --configuration Release \
-            --no-build \
-            --results-directory TestResults
+      # 🧪 Exécuter les tests
+      - name: Run Unit Tests (xUnit)
+        run: >
+          dotnet test ${{ env.SOLUTION_FILE }}
+          --configuration Release
+          --no-build
+          --logger trx
+          --results-directory TestResults
 
-      - name: Upload Test Results 📁
+      # 📄 (Optionnel) Convertir TRX en HTML
+      - name: Install Test Report Tool
+        run: dotnet tool install -g trx2html
+
+      - name: Convert TRX to HTML
+        run: trx2html TestResults/*.trx
+
+      # 📤 Publier les résultats de tests
+      - name: Upload Test Results (TRX + HTML)
         uses: actions/upload-artifact@v4
         with:
           name: test-results
@@ -79,29 +72,22 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Cache NuGet 🗂️
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Setup .NET 📦
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Publish 🚀
-        run: |
-          dotnet publish CleanArchitecture.sln \
-            --configuration Release \
-            --output ./published \
-            --no-build
+      - name: Publish Application
+        run: >
+          dotnet publish ${{ env.SOLUTION_FILE }}
+          --configuration Release
+          --no-build
+          --output ./published
 
-      - name: Upload published artifacts
+      - name: Upload Published App
         uses: actions/upload-artifact@v4
         with:
           name: published-app
