@@ -33,18 +33,29 @@ jobs:
       - name: Restore dependencies 📂
         run: dotnet restore CleanArchitecture.sln
 
-      - name: Build 🧱
+      - name: Build solution 🧱
         run: dotnet build CleanArchitecture.sln --configuration Release --no-restore -warnaserror
 
-      - name: Run All Tests 🧪
-        run: dotnet test CleanArchitecture.sln --configuration Release --no-build --logger trx --results-directory TestResults
+      - name: Run all tests 🧪
+        run: dotnet test CleanArchitecture.sln --configuration Release --no-build --logger "trx;LogFileName=TestResults/test-results.trx" --results-directory TestResults
 
-      - name: Convert TRX to JUnit XML 📜
-        uses: dorny/test-reporter@v2
+      - name: Install trx2junit tool 📦
+        run: dotnet tool install --global trx2junit
+
+      - name: Convert TRX → JUnit XML 📜
+        run: $HOME/.dotnet/tools/trx2junit TestResults/*.trx -o TestResults/test-results.xml
+
+      - name: Publish JUnit Test Report 📊
+        uses: mikepenz/action-junit-report@v2
         with:
-          name: All Tests
-          path: TestResults/*.trx
-          reporter: dotnet-trx
+          report_paths: TestResults/test-results.xml
+          fail_on_failure: true
+
+      - name: Upload Test Artifacts 📁
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/test-results.xml
 
   publish:
     runs-on: ubuntu-latest
@@ -62,7 +73,7 @@ jobs:
       - name: Publish 🚀
         run: dotnet publish CleanArchitecture.sln --configuration Release --output ./published --no-build
 
-      - name: Upload published artifacts
+      - name: Upload published artifacts 📁
         uses: actions/upload-artifact@v4
         with:
           name: published-app
