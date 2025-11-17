@@ -30,7 +30,11 @@ jobs:
       - name: Build
         run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
 
-  test:
+
+  # ------------------------------------------------------------
+  # 🧪 Tests Unitaires – Avec TRX
+  # ------------------------------------------------------------
+  unit_tests:
     runs-on: ubuntu-latest
     needs: build
 
@@ -43,32 +47,51 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      # 🧪 Exécuter les tests
-      - name: Run Unit Tests (xUnit)
-        run: >
-          dotnet test ${{ env.SOLUTION_FILE }}
-          --configuration Release
-          --no-build
-          --logger trx
-          --results-directory TestResults
+      - name: Run Unit Tests (Exclude ArchitectureTests)
+        run: |
+          dotnet test ${{ env.SOLUTION_FILE }} \
+            --configuration Release \
+            --no-build \
+            --logger trx \
+            --results-directory TestResults \
+            --filter "FullyQualifiedName!~ArchitectureTests"
 
-      # 📄 (Optionnel) Convertir TRX en HTML
-      - name: Install Test Report Tool
-        run: dotnet tool install -g trx2html
-
-      - name: Convert TRX to HTML
-        run: trx2html TestResults/*.trx
-
-      # 📤 Publier les résultats de tests
-      - name: Upload Test Results (TRX + HTML)
+      - name: Upload TRX Test Results
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
+          name: unit-test-results
           path: TestResults
 
+
+  # ------------------------------------------------------------
+  # 🧱 Tests d’Architecture – Sans TRX
+  # ------------------------------------------------------------
+  architecture_tests:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Run Architecture Tests (No TRX)
+        run: |
+          dotnet test tests/ArchitectureTests/ArchitectureTests.csproj \
+            --configuration Release \
+            --no-build
+
+
+  # ------------------------------------------------------------
+  # 🚀 Publication (seulement en workflow_dispatch)
+  # ------------------------------------------------------------
   publish:
     runs-on: ubuntu-latest
-    needs: test
+    needs: [unit_tests, architecture_tests]
     if: github.event_name == 'workflow_dispatch'
 
     steps:
@@ -81,11 +104,11 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Publish Application
-        run: >
-          dotnet publish ${{ env.SOLUTION_FILE }}
-          --configuration Release
-          --no-build
-          --output ./published
+        run: |
+          dotnet publish ${{ env.SOLUTION_FILE }} \
+            --configuration Release \
+            --no-build \
+            --output ./published
 
       - name: Upload Published App
         uses: actions/upload-artifact@v4
