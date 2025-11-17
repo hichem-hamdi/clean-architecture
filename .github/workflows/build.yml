@@ -53,13 +53,13 @@ jobs:
             --configuration Release \
             --no-build \
             --logger trx \
-            --results-directory TestResults
+            --results-directory tests/FunctionalTests/Api.FunctionalTests/TestResults
 
       - name: Upload TRX Test Results
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
-          path: **/TestResults
+          path: tests/FunctionalTests/Api.FunctionalTests/TestResults
 
 
   # ------------------------------------------------------------
