@@ -17,11 +17,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache NuGet 🗂️
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Setup .NET 📦
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          cache: true
 
       - name: Restore dependencies 📂
         run: dotnet restore CleanArchitecture.sln
@@ -39,11 +46,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache NuGet 🗂️
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Setup .NET 📦
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          cache: true
 
       - name: Run Tests 🧪
         run: dotnet test CleanArchitecture.sln \
@@ -66,11 +80,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache NuGet 🗂️
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Setup .NET 📦
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          cache: true
 
       - name: Publish 🚀
         run: dotnet publish CleanArchitecture.sln \
@@ -82,4 +103,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: published-app
-          path: published
+          pat
