@@ -46,6 +46,11 @@ jobs:
           path: TestResults/*.trx
           reporter: dotnet-trx
 
+      - name: Publish Test Results
+        uses: microsoft/test-platform@v1
+        with:
+            testResultsFiles: TestResults/*.trx
+
   publish:
     runs-on: ubuntu-latest
     needs: build_and_test
