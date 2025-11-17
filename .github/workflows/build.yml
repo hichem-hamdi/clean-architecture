@@ -37,7 +37,7 @@ jobs:
         run: dotnet build CleanArchitecture.sln --configuration Release --no-restore -warnaserror
 
       - name: Run all tests 🧪
-        run: dotnet test CleanArchitecture.sln --configuration Release --no-build --logger "trx;LogFileName=TestResults/test-results.trx" --results-directory TestResults
+        run: dotnet test CleanArchitecture.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
 
       - name: Install trx2junit tool 📦
         run: dotnet tool install --global trx2junit
