@@ -34,10 +34,11 @@ jobs:
         run: dotnet restore CleanArchitecture.sln
 
       - name: Build 🧱
-        run: dotnet build CleanArchitecture.sln \
-          --configuration Release \
-          --no-restore \
-          -warnaserror
+        run: |
+          dotnet build CleanArchitecture.sln \
+            --configuration Release \
+            --no-restore \
+            -warnaserror
 
   test:
     runs-on: ubuntu-latest
@@ -60,11 +61,12 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Run Tests 🧪
-        run: dotnet test CleanArchitecture.sln \
-          --configuration Release \
-          --no-build \
-          --logger trx \
-          --results-directory TestResults
+        run: |
+          dotnet test CleanArchitecture.sln \
+            --configuration Release \
+            --no-build \
+            --logger trx \
+            --results-directory TestResults
 
       - name: Upload Test Results 📁
         uses: actions/upload-artifact@v4
@@ -94,10 +96,11 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Publish 🚀
-        run: dotnet publish CleanArchitecture.sln \
-          --configuration Release \
-          --output ./published \
-          --no-build
+        run: |
+          dotnet publish CleanArchitecture.sln \
+            --configuration Release \
+            --output ./published \
+            --no-build
 
       - name: Upload published artifacts
         uses: actions/upload-artifact@v4
