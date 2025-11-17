@@ -29,12 +29,12 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies 📂
-        run: dotnet restore
+        run: dotnet restore CleanArchitecture.sln
 
       - name: Run All Tests 🧪
         run: |
             mkdir -p tests-results
-            dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory ./tests-results
+            dotnet test CleanArchitecture.sln --logger "trx;LogFileName=test-results.trx" --results-directory ./tests-results
         continue-on-error: true
 
       - name: Publish test results 📜
