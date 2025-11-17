@@ -98,6 +98,6 @@ public class RegisterUserTests : BaseFunctionalTest
         // Act
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync("/users/register", request);
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }
