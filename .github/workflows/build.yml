@@ -61,7 +61,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Run Tests 🧪
-        run: dotnet test CleanArchitecture.sln --configuration Release --results-directory TestResults
+        run: dotnet test CleanArchitecture.sln --configuration Release --logger trx --results-directory TestResults
 
       - name: Upload Test Results 📁
         uses: actions/upload-artifact@v4
