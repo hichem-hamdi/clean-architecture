@@ -70,7 +70,7 @@ jobs:
           path: TestResults
 
       - name: Convert TRX to JUnit XML 📜
-        uses: dorny/test-reporter@v3
+        uses: dorny/test-reporter@v2
         with:
           name: xUnit Tests
           path: TestResults/*.trx
