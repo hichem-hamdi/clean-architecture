@@ -69,6 +69,13 @@ jobs:
           name: test-results
           path: TestResults
 
+      - name: Convert TRX to JUnit XML 📜
+        uses: dorny/test-reporter@v3
+        with:
+          name: xUnit Tests
+          path: TestResults/*.trx
+          reporter: dotnet-trx
+
   publish:
     runs-on: ubuntu-latest
     needs: test
