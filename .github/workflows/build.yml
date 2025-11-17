@@ -44,6 +44,9 @@ jobs:
 
       - name: Convert TRX → JUnit XML 📜
         run: $HOME/.dotnet/tools/trx2junit --output TestResults/test-results.xml TestResults/*.trx
+      
+      - name: List TestResults
+        run: ls -R TestResults
 
       - name: Publish JUnit Test Report 📊
         uses: mikepenz/action-junit-report@v2
