@@ -39,19 +39,16 @@ jobs:
         run: dotnet build CleanArchitecture.sln --configuration Release --no-restore -warnaserror
 
       - name: Run All Tests 🧪
-        run: dotnet test CleanArchitecture.sln --configuration Release --no-build --logger trx --results-directory TestResults
+        run: dotnet test CleanArchitecture.sln --configuration Release --no-build --logger "junit;LogFilePath=TestResults/test-results.xml"
 
-      - name: Convert TRX to JUnit XML 📜
-        uses: dorny/test-reporter@v2
+      - name: Display JUnit Test Report 📊
+        uses: mikepenz/action-junit-report@v2
         with:
-          name: All Tests
-          path: TestResults/*.trx
-          reporter: dotnet-trx
-
-      - name: Publish Test Results
-        uses: microsoft/test-platform@v1
-        with:
-            testResultsFiles: TestResults/*.trx
+          report_paths: TestResults/test-results.xml
+          fail_on_failure: true
+          check_name: JUnit Test Report
+          include_passed: true
+          require_tests: false
 
   publish:
     runs-on: ubuntu-latest
