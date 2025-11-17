@@ -51,9 +51,8 @@ jobs:
         run: |
           dotnet test tests/FunctionalTests/Api.FunctionalTests/Api.FunctionalTests.csproj \
             --configuration Release \
-            --no-build \
             --logger trx \
-            --results-directory tests/FunctionalTests/Api.FunctionalTests/TestResults
+            --results-directory TestResults
 
       - name: Upload TRX Test Results
         uses: actions/upload-artifact@v4
@@ -82,7 +81,6 @@ jobs:
         run: |
           dotnet test tests/ArchitectureTests/ArchitectureTests.csproj \
             --configuration Release \
-            --no-build
 
 
   # ------------------------------------------------------------
