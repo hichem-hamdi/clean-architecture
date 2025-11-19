@@ -31,6 +31,9 @@ jobs:
       - name: Restore dependencies 📂
         run: dotnet restore CleanArchitecture.sln
 
+      - name: Build 🧱
+        run: dotnet build CleanArchitecture.sln --configuration Release --no-restore -warnaserror
+
       - name: Run All Tests 🧪
         run: |
             mkdir -p tests-results

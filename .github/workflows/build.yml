@@ -1,69 +1,69 @@
-﻿name: Build & Test 🧪
+﻿# name: Build & Test 🧪
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-  workflow_dispatch:
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#   workflow_dispatch:
 
-env:
-  DOTNET_VERSION: "9.x"
+# env:
+#   DOTNET_VERSION: "9.x"
 
-jobs:
+# jobs:
 
-  build_and_test:
-    runs-on: ubuntu-latest
+#   build_and_test:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+#     steps:
+#       - uses: actions/checkout@v4
 
-      - name: Cache NuGet 🗂️
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
+#       - name: Cache NuGet 🗂️
+#         uses: actions/cache@v4
+#         with:
+#           path: ~/.nuget/packages
+#           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+#           restore-keys: |
+#             ${{ runner.os }}-nuget-
 
-      - name: Setup .NET 📦
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+#       - name: Setup .NET 📦
+#         uses: actions/setup-dotnet@v4
+#         with:
+#           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies 📂
-        run: dotnet restore CleanArchitecture.sln
+#       - name: Restore dependencies 📂
+#         run: dotnet restore CleanArchitecture.sln
 
-      - name: Build 🧱
-        run: dotnet build CleanArchitecture.sln --configuration Release --no-restore -warnaserror
+#       - name: Build 🧱
+#         run: dotnet build CleanArchitecture.sln --configuration Release --no-restore -warnaserror
 
-      - name: Run All Tests 🧪
-        run: dotnet test CleanArchitecture.sln --configuration Release --no-build --logger trx --results-directory TestResults
+#       - name: Run All Tests 🧪
+#         run: dotnet test CleanArchitecture.sln --configuration Release --no-build --logger trx --results-directory TestResults
 
-      - name: Convert TRX to JUnit XML 📜
-        uses: dorny/test-reporter@v2
-        with:
-          name: All Tests
-          path: TestResults/*.trx
-          reporter: dotnet-trx
+#       - name: Convert TRX to JUnit XML 📜
+#         uses: dorny/test-reporter@v2
+#         with:
+#           name: All Tests
+#           path: TestResults/*.trx
+#           reporter: dotnet-trx
 
-  publish:
-    runs-on: ubuntu-latest
-    needs: build_and_test
-    if: github.event_name == 'workflow_dispatch'
+#   publish:
+#     runs-on: ubuntu-latest
+#     needs: build_and_test
+#     if: github.event_name == 'workflow_dispatch'
 
-    steps:
-      - uses: actions/checkout@v4
+#     steps:
+#       - uses: actions/checkout@v4
 
-      - name: Setup .NET 📦
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+#       - name: Setup .NET 📦
+#         uses: actions/setup-dotnet@v4
+#         with:
+#           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Publish 🚀
-        run: dotnet publish CleanArchitecture.sln --configuration Release --output ./published --no-build
+#       - name: Publish 🚀
+#         run: dotnet publish CleanArchitecture.sln --configuration Release --output ./published --no-build
 
-      - name: Upload published artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: published-app
-          path: published
+#       - name: Upload published artifacts
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: published-app
+#           path: published
