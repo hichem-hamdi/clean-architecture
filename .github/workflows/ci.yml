@@ -37,7 +37,7 @@ jobs:
       - name: Run All Tests 🧪
         run: |
             mkdir -p tests-results
-            dotnet test CleanArchitecture.sln --logger "trx;LogFileName=test-results.trx" --results-directory ./tests-results
+            dotnet test CleanArchitecture.sln --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory ./tests-results
         continue-on-error: true
 
       - name: Publish test results 📜
@@ -45,3 +45,20 @@ jobs:
         if: always()
         with:
           files: tests-results/test-results.trx
+      - name: Show Code Coverage %
+        if: always()
+        run: |
+          coverage_file=$(find tests-results -name 'coverage.cobertura.xml' | head -n 1)
+
+          if [ -z "$coverage_file" ]; then
+              echo "❌ Aucun fichier de couverture trouvé."
+              exit 0
+          fi
+
+          echo "📄 Fichier de couverture : $coverage_file"
+
+          # Extraire l'attribut 'line-rate' du XML Cobertura
+          coverage=$(xmllint --xpath "string(/coverage/@line-rate)" "$coverage_file")
+          percentage=$(awk "BEGIN { printf \"%.2f\", $coverage * 100 }")
+
+          echo "📊 **Couverture du code : $percentage%**"
