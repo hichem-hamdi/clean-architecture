@@ -14,7 +14,6 @@ env:
   DOTNET_VERSION: "9.x"
 
 jobs:
-
   run-tests:
     name: Run tests
     runs-on: ubuntu-latest
@@ -45,38 +44,48 @@ jobs:
         if: always()
         with:
           files: tests-results/test-results.trx
+
       - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
       - name: Show Code Coverage %
+        id: coverage_output   # ← IMPORTANT
         if: always()
         run: |
           coverage_file=$(find tests-results -name 'coverage.cobertura.xml' | head -n 1)
 
           if [ -z "$coverage_file" ]; then
+              echo "percentage=0" >> $GITHUB_OUTPUT
               echo "❌ Aucun fichier de couverture trouvé."
               exit 0
           fi
 
           echo "📄 Fichier de couverture : $coverage_file"
 
-          # Extraire l'attribut 'line-rate' du XML Cobertura
           coverage=$(xmllint --xpath "string(/coverage/@line-rate)" "$coverage_file")
           percentage=$(awk "BEGIN { printf \"%.2f\", $coverage * 100 }")
 
           echo "📊 **Couverture du code : $percentage%**"
+
+          # ⬅️ OUTPUT pour les autres étapes
+          echo "percentage=$percentage" >> $GITHUB_OUTPUT
+
       - name: Post coverage as GitHub Check
         uses: actions/github-script@v7
         if: always()
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const percentage = process.env.COVERAGE_PERCENTAGE;
-        
+            const percentage = "${{ steps.coverage_output.outputs.percentage }}";
+            const sha = context.payload.pull_request
+              ? context.payload.pull_request.head.sha
+              : context.sha;
+
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               name: "Code Coverage",
-              head_sha: context.sha,
+              head_sha: sha,
               status: "completed",
               conclusion: "neutral",
               output: {
@@ -84,5 +93,3 @@ jobs:
                 summary: `**${percentage}%**`
               }
             });
-        env:
-          COVERAGE_PERCENTAGE: ${{ steps.coverage_output.outputs.percentage }}
