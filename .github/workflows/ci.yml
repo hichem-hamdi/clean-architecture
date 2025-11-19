@@ -12,6 +12,7 @@ permissions:
 
 env:
   DOTNET_VERSION: "9.x"
+  COVERAGE_PERCENTAGE: ${{ steps.coverage_output.outputs.percentage }}
 
 jobs:
 
@@ -64,3 +65,23 @@ jobs:
           percentage=$(awk "BEGIN { printf \"%.2f\", $coverage * 100 }")
 
           echo "📊 **Couverture du code : $percentage%**"
+      - name: Post coverage as GitHub Check
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const percentage = process.env.COVERAGE_PERCENTAGE;
+        
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: "Code Coverage",
+              head_sha: context.sha,
+              status: "completed",
+              conclusion: "neutral",
+              output: {
+                title: "Code Coverage Result",
+                summary: `**${percentage}%**`
+              }
+            });
