@@ -45,6 +45,8 @@ jobs:
         if: always()
         with:
           files: tests-results/test-results.trx
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
       - name: Show Code Coverage %
         if: always()
         run: |
