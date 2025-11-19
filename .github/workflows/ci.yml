@@ -1,9 +1,9 @@
-﻿name: Run tests and publish results on PRs 🧪
+﻿name: build and tests 🧱 🧪
 
 on:
   pull_request:
     branches:
-     - main
+      - main
 
 permissions:
   contents: read
@@ -14,10 +14,14 @@ env:
   DOTNET_VERSION: "9.x"
 
 jobs:
-  run-tests:
-    name: Run tests
+  # ----------------------
+  # 🔹 JOB BUILD
+  # ----------------------
+  build:
+    name: Build 🧱
     runs-on: ubuntu-latest
-
+    outputs:
+      build-artifact: ${{ steps.build_sln.outputs.artifact-path }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,13 +34,41 @@ jobs:
       - name: Restore dependencies 📂
         run: dotnet restore CleanArchitecture.sln
 
-      - name: Build 🧱
-        run: dotnet build CleanArchitecture.sln --configuration Release --no-restore -warnaserror
-
-      - name: Run All Tests 🧪
+      - name: Build solution 🧱
+        id: build_sln
         run: |
-            mkdir -p tests-results
-            dotnet test CleanArchitecture.sln --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory ./tests-results
+          dotnet build CleanArchitecture.sln --configuration Release --no-restore -warnaserror
+          echo "artifact-path=./CleanArchitecture.sln" >> $GITHUB_OUTPUT
+
+  # ----------------------
+  # 🔹 JOB TEST
+  # ----------------------
+  test:
+    name: Run Tests & Coverage 🧪
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 📦
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies 📂
+        run: dotnet restore CleanArchitecture.sln
+
+      - name: Build solution (reuse build)
+        run: dotnet build CleanArchitecture.sln --configuration Release --no-restore
+
+      - name: Run All Tests 🧪 📊
+        run: |
+          mkdir -p tests-results
+          dotnet test CleanArchitecture.sln \
+            --logger "trx;LogFileName=test-results.trx" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./tests-results
         continue-on-error: true
 
       - name: Publish test results 📜
@@ -48,8 +80,8 @@ jobs:
       - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
 
-      - name: Show Code Coverage %
-        id: coverage_output   # ← IMPORTANT
+      - name: Extract Code Coverage %
+        id: coverage_output
         if: always()
         run: |
           coverage_file=$(find tests-results -name 'coverage.cobertura.xml' | head -n 1)
@@ -60,14 +92,9 @@ jobs:
               exit 0
           fi
 
-          echo "📄 Fichier de couverture : $coverage_file"
-
           coverage=$(xmllint --xpath "string(/coverage/@line-rate)" "$coverage_file")
           percentage=$(awk "BEGIN { printf \"%.2f\", $coverage * 100 }")
-
           echo "📊 **Couverture du code : $percentage%**"
-
-          # ⬅️ OUTPUT pour les autres étapes
           echo "percentage=$percentage" >> $GITHUB_OUTPUT
 
       - name: Publish Coverage as Check
@@ -81,44 +108,19 @@ jobs:
               ? context.payload.pull_request.head.sha
               : context.sha;
 
-            const checkName = "Code Coverage";
-
-            // Vérifier si un check existe déjà
-            const existing = await github.rest.checks.listForRef({
+            await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: sha
+              name: "Code Coverage",
+              head_sha: sha,
+              status: "completed",
+              conclusion: "neutral",
+              output: {
+                title: "Code Coverage Result",
+                summary: `Coverage: **${percentage}%**`
+              }
             });
 
-            const prev = existing.data.check_runs.find(c => c.name === checkName);
-
-            if (prev) {
-              // Mise à jour du check
-              await github.rest.checks.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                check_run_id: prev.id,
-                conclusion: "neutral",
-                output: {
-                  title: "Code Coverage Result",
-                  summary: `Coverage: **${percentage}%**`
-                }
-              });
-            } else {
-              // Création du check
-              await github.rest.checks.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                name: checkName,
-                head_sha: sha,
-                status: "completed",
-                conclusion: "neutral",
-                output: {
-                  title: "Code Coverage Result",
-                  summary: `Coverage: **${percentage}%**`
-                }
-              });
-            }
       - name: Comment coverage on PR
         if: always()
         uses: actions/github-script@v7
@@ -128,14 +130,10 @@ jobs:
             const percentage = "${{ steps.coverage_output.outputs.percentage }}";
             const pr = context.payload.pull_request?.number;
 
-            if (!pr) {
-              console.log("No pull_request context, skipping.");
-              return;
-            }
+            if (!pr) return;
 
             const body = `📊 **Code Coverage:** ${percentage}%`;
 
-            // Chercher un commentaire existant
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -147,7 +145,6 @@ jobs:
             );
 
             if (botComment) {
-              // Mise à jour du commentaire
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -155,7 +152,6 @@ jobs:
                 body,
               });
             } else {
-              // Nouveau commentaire
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -163,5 +159,3 @@ jobs:
                 body,
               });
             }
-
-
