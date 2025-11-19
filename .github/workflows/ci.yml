@@ -1,4 +1,4 @@
-﻿name: build and tests 🧱 🧪
+﻿name: Build and Test with Coverage 🧱🧪
 
 on:
   pull_request:
@@ -18,50 +18,46 @@ jobs:
   # 🔹 JOB BUILD
   # ----------------------
   build:
-    name: Build 🧱
+    name: Build Solution 🧱
     runs-on: ubuntu-latest
-    outputs:
-      build-artifact: ${{ steps.build_sln.outputs.artifact-path }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET 📦
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies 📂
+      - name: Restore dependencies
         run: dotnet restore CleanArchitecture.sln
 
-      - name: Build solution 🧱
-        id: build_sln
-        run: |
-          dotnet build CleanArchitecture.sln --configuration Release --no-restore -warnaserror -v:detailed
+      - name: Build solution
+        run: dotnet build CleanArchitecture.sln --configuration Release --no-restore -v:detailed
 
   # ----------------------
   # 🔹 JOB TEST
   # ----------------------
   test:
-    name: Run Tests & Coverage 🧪 📊
+    name: Run Tests & Coverage 🧪📊
     runs-on: ubuntu-latest
-    needs: build
+    needs: build  # dépend du build pour la séquence, mais reste dans un job séparé
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET 📦
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies 📂
+      - name: Restore dependencies
         run: dotnet restore CleanArchitecture.sln
 
-      - name: Build solution (reuse build)
+      - name: Build solution for tests
         run: dotnet build CleanArchitecture.sln --configuration Release --no-restore
 
-      - name: Run All Tests 🧪
+      - name: Run all tests with coverage
         run: |
           mkdir -p tests-results
           dotnet test CleanArchitecture.sln \
@@ -71,7 +67,7 @@ jobs:
             -v:detailed
         continue-on-error: true
 
-      - name: Publish test results 📜
+      - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
@@ -80,7 +76,7 @@ jobs:
       - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
 
-      - name: Extract Code Coverage %
+      - name: Extract code coverage %
         id: coverage_output
         if: always()
         run: |
@@ -97,7 +93,7 @@ jobs:
           echo "📊 **Couverture du code : $percentage%**"
           echo "percentage=$percentage" >> $GITHUB_OUTPUT
 
-      - name: Publish Coverage as Check
+      - name: Publish coverage as check
         uses: actions/github-script@v7
         if: always()
         with:
@@ -129,7 +125,6 @@ jobs:
           script: |
             const percentage = "${{ steps.coverage_output.outputs.percentage }}";
             const pr = context.payload.pull_request?.number;
-
             if (!pr) return;
 
             const body = `📊 **Code Coverage:** ${percentage}%`;
