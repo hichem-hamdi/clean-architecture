@@ -12,7 +12,6 @@ permissions:
 
 env:
   DOTNET_VERSION: "9.x"
-  COVERAGE_PERCENTAGE: ${{ steps.coverage_output.outputs.percentage }}
 
 jobs:
 
@@ -85,3 +84,5 @@ jobs:
                 summary: `**${percentage}%**`
               }
             });
+        env:
+          COVERAGE_PERCENTAGE: ${{ steps.coverage_output.outputs.percentage }}
